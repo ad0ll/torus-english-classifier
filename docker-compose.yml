@@ -4,5 +4,5 @@ services:
       context: ./typescript
       dockerfile: Dockerfile
     ports:
-      - "3016:3000"
+      - "3012:3000"
     restart: unless-stopped

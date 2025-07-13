@@ -8,14 +8,14 @@ The TypeScript code for the API is located in the `typescript/` directory.
 
 ### Usage
 
-Once the service is running (e.g., via `docker-compose up`), you can use the following cURL commands to test the API. The service will be available at `http://localhost:3016`.
+Once the service is running (e.g., via `docker-compose up`), you can use the following cURL commands to test the API. The service will be available at `http://localhost:3012`.
 
 #### Single text detection
 
 To check a single string of text:
 
 ```bash
-curl -X POST http://localhost:3016/is-english \
+curl -X POST http://localhost:3012/is-english \
 -H "Content-Type: application/json" \
 -d '{
   "text": "this is a test in english"
@@ -33,7 +33,7 @@ Expected response:
 To check a non-English text:
 
 ```bash
-curl -X POST http://localhost:3016/is-english \
+curl -X POST http://localhost:3012/is-english \
 -H "Content-Type: application/json" \
 -d '{
   "text": "esto es una prueba en español"
@@ -53,7 +53,7 @@ Expected response:
 To check a batch of texts:
 
 ```bash
-curl -X POST http://localhost:3016/is-english-batch \
+curl -X POST http://localhost:3012/is-english-batch \
 -H "Content-Type: application/json" \
 -d '{
   "texts": [
@@ -82,3 +82,13 @@ Expected response:
   }
 ]
 ```
+
+### Test
+
+`curl -X POST -H "Content-Type: application/json" -d '{"text": "this is an english sentence"}' http://localhost:3012/is-english`
+
+`curl -X POST -H "Content-Type: application/json" -d '{"text": "this is an english sentence"}' https://real-trump.fun/language-detection/is-english`
+
+`curl -X POST -H "Content-Type: application/json" -d '{"texts": [{"text": "this is an english sentence"}, {"text": "ceci est une phrase en français"}]}' http://localhost:3012/is-english-batch`
+
+`curl -X POST -H "Content-Type: application/json" -d '{"texts": [{"text": "this is an english sentence"}, {"text": "ceci est une phrase en français"}]}' https://real-trump.fun/language-detection/is-english-batch`

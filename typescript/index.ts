@@ -2,6 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { franc } from "franc-min";
 import { Hono } from "hono";
 import { z } from "zod";
+import { Agent } from "@torus-network/sdk";
 
 // Constants
 const MIN_CONFIDENCE = 0.7;

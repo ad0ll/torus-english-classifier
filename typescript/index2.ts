@@ -11,7 +11,6 @@ const agent = new Agent({
       version: "1.0.0",
     },
   },
-  
 });
 
 // Define a simple endpoint
@@ -21,11 +20,6 @@ agent.method(
     input: z.object({
       name: z.string().min(1).max(50),
     }),
-    namespace: {
-      enabled: true,
-      path: "agent.hello",
-      rpcUrls: ["wss://api.torus.network"],
-    },
     output: {
       ok: {
         description: "Greeting response",
@@ -43,6 +37,9 @@ agent.method(
     },
   },
   async (input, context) => {
+    console.log("hello");
+    console.log(input);
+    console.log(context);
     return {
       ok: {
         message: `Hello ${input.name}!`,

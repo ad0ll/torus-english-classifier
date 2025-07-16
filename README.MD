@@ -6,6 +6,12 @@ This repository contains a simple API to detect if a given text is in English.
 
 The TypeScript code for the API is located in the `typescript/` directory.
 
+### Limitations
+
+The typescript implementation uses franc-min and is a stand-in for a later rust implemnentation that will use lingua and whatlang for stronger detection.
+
+franc-min struggles with very short texts, for example: "これは英語だろうか" will come back at "und" (undetermined) despite being japanese. To work around this, we have a defaultOnUndetermined flag that defaults to false, which may eat up some of the false positives but will ensure that the content that is classified is in English.
+
 ### Usage
 
 Once the service is running (e.g., via `docker-compose up`), you can use the following cURL commands to test the API. The service will be available at `http://localhost:3012`.
@@ -83,7 +89,8 @@ Expected response:
 ]
 ```
 
-### Test
+
+### Other Tests
 
 `curl -X POST -H "Content-Type: application/json" -d '{"text": "this is an english sentence"}' http://localhost:3012/is-english`
 
@@ -92,3 +99,5 @@ Expected response:
 `curl -X POST -H "Content-Type: application/json" -d '{"texts": [{"text": "this is an english sentence"}, {"text": "ceci est une phrase en français"}]}' http://localhost:3012/is-english-batch`
 
 `curl -X POST -H "Content-Type: application/json" -d '{"texts": [{"text": "this is an english sentence"}, {"text": "ceci est une phrase en français"}]}' https://real-trump.fun/language-detection/is-english-batch`
+
+`curl -X POST localhost:3000/is-english -H "Content-Type: application/json" -d '{"text": "赤字に苦しんでいた従業員１７人の企業の株価が、わずか１年あまりで約１００倍に跳ね上がり、大きな話題を呼んでいる。時価総額は一時１兆円に達し、東証スタンダード市場で２位の規模に躍り出た。投資家が注目するのは、暗号資産ビットコインの大量購入という戦略だ", "defaultOnUndetermined": true}'`

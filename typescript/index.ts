@@ -1,12 +1,11 @@
-import { zValidator } from "@hono/zod-validator";
+import type { SS58Address } from "@torus-network/sdk";
+import { Agent } from "@torus-network/sdk/agent";
 import { franc } from "franc-min";
-import { Hono } from "hono";
 import { z } from "zod";
-import { Agent } from "@torus-network/sdk";
 
 // Constants
 const MIN_CONFIDENCE = 0.7;
-const MIN_TEXT_LENGTH = 10;
+const MIN_TEXT_LENGTH = 5;
 
 // Helper function for uncertain results
 function getUncertainResult(defaultOnUndetermined: boolean) {
@@ -30,7 +29,7 @@ function cleanText(text: string): string {
       ""
     )
     // Remove punctuation (keep letters, numbers, and spaces)
-    .replace(/[^\w\s]/g, " ")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
     // Replace multiple spaces with single space
     .replace(/\s+/g, " ")
     // Trim whitespace
@@ -107,6 +106,10 @@ const IsEnglishResponseSchema = z.object({
   isEnglish: z.boolean().describe("Whether the text is English."),
 });
 
+const ErrorSchema = z.object({
+  error: z.string(),
+});
+
 const IsEnglishBatchSchema = z.object({
   texts: z.array(IsEnglishSchema),
   detectionMethods: z
@@ -128,37 +131,77 @@ const IsEnglishBatchResponseSchema = z.array(
   })
 );
 
-const app = new Hono();
-
-app.post("/is-english", zValidator("json", IsEnglishSchema), (c) => {
-  const { text, defaultOnUndetermined } = c.req.valid("json");
-
-  const result = detectLanguage(text, defaultOnUndetermined);
-
-  // Validate response against schema
-  const validatedResponse = IsEnglishResponseSchema.parse(result);
-  return c.json(validatedResponse);
+// Agent
+const agent = new Agent({
+  agentKey: "5DwEqYekMJV9C1hU4hk16bzhtGHbvbkMxJK5rNVFsAu5NwAD" as SS58Address, // Your agent's SS58 address
+  port: 3000,
+  docs: {
+    info: {
+      title: "English Detector",
+      version: "1.0.0",
+    },
+  },
 });
 
-app.post("/is-english-batch", zValidator("json", IsEnglishBatchSchema), (c) => {
-  const { texts, defaultOnUndetermined } = c.req.valid("json");
+agent.method(
+  "is-english",
+  {
+    input: IsEnglishSchema,
+    output: {
+      ok: {
+        description: "Whether the text is English.",
+        schema: IsEnglishResponseSchema,
+      },
+      err: {
+        description: "Error response",
+        schema: ErrorSchema,
+      },
+    },
+  },
+  async (input) => {
+    const validated = IsEnglishSchema.safeParse(input);
+    if (!validated.success) {
+      return { err: { error: validated.error.toString() } };
+    }
+    const { text, defaultOnUndetermined } = validated.data;
+    const result = detectLanguage(text, defaultOnUndetermined);
+    const validatedResponse = IsEnglishResponseSchema.parse(result);
+    return { ok: validatedResponse };
+  }
+);
 
-  const results = texts.map((item) => {
-    const result = detectLanguage(item.text, defaultOnUndetermined);
-
-    return {
-      text: item.text,
-      ...result,
-    };
-  });
-
-  // Validate response against schema
-  const validatedResponse = IsEnglishBatchResponseSchema.parse(results);
-  return c.json(validatedResponse);
-});
+agent.method(
+  "is-english-batch",
+  {
+    input: IsEnglishBatchSchema,
+    output: {
+      ok: {
+        description: "Array of results for whether each text is English.",
+        schema: IsEnglishBatchResponseSchema,
+      },
+      err: {
+        description: "Error response",
+        schema: ErrorSchema,
+      },
+    },
+  },
+  async (input) => {
+    const validated = IsEnglishBatchSchema.safeParse(input);
+    if (!validated.success) {
+      return { err: { error: validated.error.toString() } };
+    }
+    const { texts, defaultOnUndetermined } = validated.data;
+    const results = texts.map((item) => {
+      const result = detectLanguage(item.text, defaultOnUndetermined);
+      return {
+        text: item.text,
+        ...result,
+      };
+    });
+    const validatedResponse = IsEnglishBatchResponseSchema.parse(results);
+    return { ok: validatedResponse };
+  }
+);
 
 // Start the server
-export default {
-  port: 3000,
-  fetch: app.fetch,
-};
+agent.run();

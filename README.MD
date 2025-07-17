@@ -100,4 +100,4 @@ Expected response:
 
 `curl -X POST -H "Content-Type: application/json" -d '{"texts": [{"text": "this is an english sentence"}, {"text": "ceci est une phrase en français"}]}' https://real-trump.fun/language-detection/is-english-batch`
 
-`curl -X POST localhost:3000/is-english -H "Content-Type: application/json" -d '{"text": "赤字に苦しんでいた従業員１７人の企業の株価が、わずか１年あまりで約１００倍に跳ね上がり、大きな話題を呼んでいる。時価総額は一時１兆円に達し、東証スタンダード市場で２位の規模に躍り出た。投資家が注目するのは、暗号資産ビットコインの大量購入という戦略だ", "defaultOnUndetermined": true}'`
+`curl -X POST localhost:3000/is-english -H "Content-Type: application/json" -d '{"text": "赤字に苦しんでいた従業員１７人の企業の株価が、わずか１年あまりで約１００倍に跳ね上がり、大きな話題を呼んでいる。", "defaultOnUndetermined": true}'`

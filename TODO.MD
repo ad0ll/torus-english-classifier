@@ -1,0 +1,1 @@
+- When the version of the agent that uses AgentServer is deployed, update the reference torus-client.ts and <https://www.notion.so/Trump-fun-Torus-Agents-23390dd606c180909d05fedd105d2554?source=copy_link#23390dd606c180f382a1ce1e2c896411> to point to the real-trump.fun URL

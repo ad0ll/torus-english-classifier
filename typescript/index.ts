@@ -2,6 +2,7 @@ import type { SS58Address } from "@torus-network/sdk";
 import { Agent } from "@torus-network/sdk/agent";
 import { franc } from "franc-min";
 import { z } from "zod";
+import logger from "./logger";
 
 // Constants
 const MIN_CONFIDENCE = 0.7;
@@ -47,18 +48,21 @@ function detectLanguage(
 
   // Check if text is empty after cleaning
   if (cleanedText.length === 0) {
-    console.log(
-      "Language detection: Empty text after cleaning, using defaultOnUndetermined:",
-      defaultOnUndetermined
+    logger.debug(
+      { defaultOnUndetermined },
+      "Language detection: Empty text after cleaning"
     );
     return getUncertainResult(defaultOnUndetermined);
   }
 
   // Check if text is too short
   if (cleanedText.length < MIN_TEXT_LENGTH) {
-    console.log(
-      `Language detection: Text too short (${cleanedText.length} chars), using defaultOnUndetermined:`,
-      defaultOnUndetermined
+    logger.debug(
+      {
+        textLength: cleanedText.length,
+        defaultOnUndetermined,
+      },
+      `Language detection: Text too short`
     );
     return getUncertainResult(defaultOnUndetermined);
   }
@@ -68,18 +72,16 @@ function detectLanguage(
 
   // If franc couldn't determine the language
   if (detectedLanguage === "und") {
-    console.log(
-      "Language detection: Franc returned undetermined, using defaultOnUndetermined:",
-      defaultOnUndetermined
+    logger.debug(
+      { defaultOnUndetermined },
+      "Language detection: Franc returned undetermined"
     );
     return getUncertainResult(defaultOnUndetermined);
   }
 
   // Check if the detected language is English
   const isEnglish = detectedLanguage === "eng";
-  console.log(
-    `Language detection: Detected ${detectedLanguage} -> isEnglish: ${isEnglish}`
-  );
+  logger.debug({ detectedLanguage, isEnglish }, "Language detection result");
 
   return {
     isEnglish,
@@ -111,7 +113,7 @@ const ErrorSchema = z.object({
 });
 
 const IsEnglishBatchSchema = z.object({
-  texts: z.array(IsEnglishSchema),
+  texts: z.array(z.string()).describe("The texts to be analyzed."),
   detectionMethods: z
     .array(z.enum(["franc"]))
     .default(["franc"])
@@ -159,6 +161,7 @@ agent.method(
     },
   },
   async (input) => {
+    logger.info({ input }, "is-english request received");
     const validated = IsEnglishSchema.safeParse(input);
     if (!validated.success) {
       return { err: { error: validated.error.toString() } };
@@ -166,6 +169,7 @@ agent.method(
     const { text, defaultOnUndetermined } = validated.data;
     const result = detectLanguage(text, defaultOnUndetermined);
     const validatedResponse = IsEnglishResponseSchema.parse(result);
+    logger.info({ input, result }, "is-english request processed");
     return { ok: validatedResponse };
   }
 );
@@ -186,19 +190,21 @@ agent.method(
     },
   },
   async (input) => {
+    logger.info({ input }, "is-english-batch request received");
     const validated = IsEnglishBatchSchema.safeParse(input);
     if (!validated.success) {
       return { err: { error: validated.error.toString() } };
     }
     const { texts, defaultOnUndetermined } = validated.data;
-    const results = texts.map((item) => {
-      const result = detectLanguage(item.text, defaultOnUndetermined);
+    const results = texts.map((text) => {
+      const result = detectLanguage(text, defaultOnUndetermined);
       return {
-        text: item.text,
+        text,
         ...result,
       };
     });
     const validatedResponse = IsEnglishBatchResponseSchema.parse(results);
+    logger.info({ input, results }, "is-english-batch request processed");
     return { ok: validatedResponse };
   }
 );

@@ -9,7 +9,10 @@
     "check-types": "bun tsc"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.4",
+    "ts-jest": "^29.4.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -20,8 +23,11 @@
     "@hono/zod-openapi": "^0.19.10",
     "@hono/zod-validator": "^0.7.1",
     "@torus-network/sdk": "^1.0.0",
+    "dotenv": "^17.2.0",
     "franc-min": "^6.2.0",
     "hono": "^4.8.4",
+    "pino": "^9.7.0",
+    "pino-pretty": "^13.0.0",
     "zod": "^3.23.8"
   }
 }
